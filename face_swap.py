@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 import mediapipe as mp
 
 def get_images_gray(source_image, target_image):
@@ -26,13 +25,9 @@ def get_int_points(landmark_points):
     return np.array(landmark_points, dtype=np.int32)
 
 
-def get_convex_hull(landmark_points, image):
+def get_convex_hull(landmark_points):
     points = get_int_points(landmark_points)
     convex_hull = cv2.convexHull(points)
-    # cv2.polylines(image, [convex_hull], isClosed=True, color=(0, 0, 255), thickness=2)
-    # cv2.imshow("Convex Hull", image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
     return convex_hull
 
 def get_mask(image):    
@@ -106,13 +101,11 @@ def swap_faces(source_indexes_triangles, source_img, dest_img):
          return None
 
 
-    # --- Process Each Triangle ---
     skipped_count = 0
     for triangle_index in source_indexes_triangles:
         try:
             # Validate indices
             if any(idx >= len(source_lpoints) or idx >= len(dest_lpoints) for idx in triangle_index):
-                 # print(f"Warning: Skipping triangle with out-of-bounds index: {triangle_index}")
                  skipped_count+=1
                  continue
 
@@ -124,7 +117,7 @@ def swap_faces(source_indexes_triangles, source_img, dest_img):
             triangle1_int = np.array([tr1_pt1, tr1_pt2, tr1_pt3], np.int32)
             rect1 = cv2.boundingRect(triangle1_int)
             x1, y1, w1, h1 = rect1
-            x1, y1 = max(0, x1), max(0, y1) # Ensure non-negative origin
+            x1, y1 = max(0, x1), max(0, y1)
 
             if w1 <= 0 or h1 <= 0: skipped_count+=1; continue # Skip degenerate rect
 
@@ -173,7 +166,6 @@ def swap_faces(source_indexes_triangles, source_img, dest_img):
 
                 # 4. Reconstruct Destination Face (Blend triangles)
                 if y2 + h2 > h_dest or x2 + w2 > w_dest:
-                    # print(f"Warning: Skipping triangle due to OOB slice in destination: rect({x2},{y2},{w2},{h2}), dest_shape({w_dest},{h_dest})")
                     skipped_count+=1
                     continue
 
@@ -194,27 +186,21 @@ def swap_faces(source_indexes_triangles, source_img, dest_img):
                      mask_to_blend = mask_existing
 
 
-                # Blend: Only add warped pixels where there isn't already part of another triangle
-                # Ensure mask_to_blend is broadcastable (single channel)
                 if len(mask_to_blend.shape) == 3: # Should not happen, but check
                      mask_to_blend = mask_to_blend[:,:,0]
 
-                # Apply inverse mask to warped triangle
                 warped_triangle_masked = cv2.bitwise_and(warped_triangle, warped_triangle, mask=mask_to_blend)
 
-                # Add to the destination rectangle area
                 dest_new_face[y2 : y2 + h2, x2 : x2 + w2] = cv2.add(dest_rect_area, warped_triangle_masked)
 
             except cv2.error as e:
-                # print(f"Warning: OpenCV error during warp/blend for triangle {triangle_index}: {e}")
                 skipped_count+=1
-                continue # Skip this triangle
+                continue 
 
-        except Exception as e: # Catch any other unexpected errors for this triangle
+        except Exception as e:
             import traceback
-            #traceback.print_exc() # Uncomment for detailed traceback
             skipped_count+=1
-            continue # Skip this triangle
+            continue 
 
     if skipped_count == len(source_indexes_triangles):
         print("Error: All triangles were skipped. Cannot proceed.")
@@ -252,7 +238,6 @@ def swap_faces(source_indexes_triangles, source_img, dest_img):
     pad_left += safety_pad
     pad_right += safety_pad
 
-    # --- Apply Padding ---
     try:
         # Pad the original destination image
         padded_dest_img = cv2.copyMakeBorder(dest_img, pad_top, pad_bottom, pad_left, pad_right, cv2.BORDER_REFLECT_101) # Reflect padding often looks better
@@ -269,10 +254,10 @@ def swap_faces(source_indexes_triangles, source_img, dest_img):
         # Adjust the center coordinates for the padded image
         new_center = (center_face_dest[0] + pad_left, center_face_dest[1] + pad_top)
 
-        # --- Perform Seamless Clone on Padded Images ---
+        # Perform Seamless Clone on Padded Images
         cloned_padded = cv2.seamlessClone(padded_result, padded_dest_img, padded_mask, new_center, cv2.NORMAL_CLONE)
 
-        # --- Crop Back to Original Size ---
+        # Crop Back to Original Size
         final_result = cloned_padded[pad_top : pad_top + h_dest, pad_left : pad_left + w_dest]
 
         return final_result
