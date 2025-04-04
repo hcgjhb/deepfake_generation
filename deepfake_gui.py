@@ -4,7 +4,7 @@ import io
 import time
 import cv2
 import numpy as np
-from face_swap import *  # Assuming you have a face_swap.py with the swap_faces function
+from face_swap import * 
 
 # Set page configuration
 st.set_page_config(
@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for beautiful boxes
+# Custom CSS
 st.markdown("""
     <style>
     .image-box {
@@ -142,15 +142,15 @@ def main():
                 with col1:
                     with st.container():
                         st.markdown('<div class="image-box"><h3>Source Image</h3></div>', unsafe_allow_html=True)
-                        st.image(pil_source, use_container_width=True)  # CHANGED HERE
+                        st.image(pil_source, use_container_width=True) 
                 with col2:
                     with st.container():
                         st.markdown('<div class="image-box"><h3>Target Image</h3></div>', unsafe_allow_html=True)
-                        st.image(pil_target, use_container_width=True)  # CHANGED HERE
+                        st.image(pil_target, use_container_width=True) 
                 with col3:
                     with st.container():
                         st.markdown('<div class="image-box"><h3>Result Image</h3></div>', unsafe_allow_html=True)
-                        st.image(result_rgb, use_container_width=True)  # CHANGED HERE
+                        st.image(result_rgb, use_container_width=True) 
                 
                 buf = io.BytesIO()
                 Image.fromarray(result_rgb).save(buf, format="PNG")
