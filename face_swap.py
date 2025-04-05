@@ -208,7 +208,7 @@ def swap_faces(source_indexes_triangles, source_img, dest_img):
 
 
     # --- Create Final Mask and Blend using SeamlessClone with Padding ---
-    dest_convexhull = get_convex_hull(dest_lpoints_int, dest_img.shape)
+    dest_convexhull = get_convex_hull(dest_lpoints_int)
     if dest_convexhull is None:
         print("Error: Could not get destination convex hull. Cannot apply seamless clone.")
         return dest_new_face # Or None

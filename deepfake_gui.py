@@ -126,7 +126,7 @@ def main():
 
                 # Run face swap using proper OpenCV images
                 source_landmark_points = get_landmark_points(source_image)
-                source_convex_hull = get_convex_hull(source_landmark_points, source_image)
+                source_convex_hull = get_convex_hull(source_landmark_points)
                 source_bounding_rect = get_bounding_rectangle(source_image, source_convex_hull)
                 source_triangles = delunay_triangulation(source_bounding_rect, source_landmark_points)
                 source_indexes_triangles = get_index_triangles(source_triangles, source_landmark_points)
