@@ -4,3 +4,7 @@ numpy>=1.22.0
 jinja2>=3.1.2
 mediapipe
 opencv-python
+torch>=2.0.0
+torchvision>=0.15.0
+tensorflow>=2.9.0
+tensorflow-hub>=0.12.0

@@ -62,7 +62,7 @@ def main():
         st.subheader("Navigation")
         page = st.radio("", 
                      ["Face Swap", 
-                      "Face Modification", 
+                      "Style Transfer",
                       "Face Morphing", 
                       "Emotion Transfer", 
                       "Diffusion Generation"])
@@ -163,7 +163,120 @@ def main():
                     mime="image/png",
                     use_container_width=True
                 )
-    
+
+
+    elif page == "Style Transfer":
+
+        st.header("🎨 Style Transfer")
+
+        st.markdown("Apply a painting or artistic style to your photo using deep learning.")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.markdown("### Content Image")
+
+            content_img_file = st.file_uploader("Upload content image", type=['jpg', 'jpeg', 'png'],
+                                                key="content_image")
+
+            if content_img_file:
+                pil_content = Image.open(content_img_file)
+
+                with st.container():
+                    st.markdown('<div class="image-box"><h3>Content Image</h3></div>', unsafe_allow_html=True)
+
+                    st.image(pil_content, use_container_width=True)
+
+        with col2:
+
+            st.markdown("### Style Image")
+
+            style_img_file = st.file_uploader("Upload style image", type=['jpg', 'jpeg', 'png'], key="style_image")
+
+            if style_img_file:
+                pil_style = Image.open(style_img_file)
+
+                with st.container():
+                    st.markdown('<div class="image-box"><h3>Style Image</h3></div>', unsafe_allow_html=True)
+
+                    st.image(pil_style, use_container_width=True)
+
+        if content_img_file and style_img_file:
+
+            if st.button("Apply Style Transfer", key="style_transfer_btn"):
+
+                st.markdown("### Processing...")
+
+                # Simulate progress
+
+                progress_bar = st.progress(0)
+
+                status_text = st.empty()
+
+                for i in range(101):
+
+                    progress_bar.progress(i)
+
+                    if i < 25:
+
+                        status_text.text("Loading style model...")
+
+                    elif i < 50:
+
+                        status_text.text("Preparing images...")
+
+                    elif i < 75:
+
+                        status_text.text("Blending content and style...")
+
+                    else:
+
+                        status_text.text("Finalizing output...")
+
+                    time.sleep(0.015)
+
+                from style_transfer import perform_style_transfer  # Import inside the action
+
+                # Run style transfer
+
+                result_image = perform_style_transfer(pil_content, pil_style)
+
+                status_text.text("Style transfer completed!")
+
+                # Display result
+
+                with st.container():
+
+                    st.markdown('<div class="image-box"><h3>Stylized Result</h3></div>', unsafe_allow_html=True)
+
+                    st.image(result_image, use_container_width=True)
+
+                # Download button
+
+                buf = io.BytesIO()
+
+                result_image.save(buf, format="PNG")
+
+                byte_im = buf.getvalue()
+
+                st.download_button(
+
+                    label="Download Stylized Image",
+
+                    data=byte_im,
+
+                    file_name="stylized_result.png",
+
+                    mime="image/png",
+
+                    use_container_width=True
+
+                )
+
+
+
+
     # Other features abbreviated for simplicity
     else:
         st.info(f"Selected {page} - Implement this feature by expanding the code.")
