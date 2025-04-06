@@ -159,7 +159,7 @@ def main():
                      ["Face Swap", 
                       "Style Transfer",
                       "Face Morphing",   # Changed from "Face Modification"
-                      "Emotion Transfer", 
+                      "Attribute Transfer",
                       "Diffusion Generation"])
         
         st.markdown("---")
@@ -436,7 +436,93 @@ def main():
                             st.error("Face morphing failed. Please try with different images/video.")
                     except Exception as e:
                         st.error(f"Face morphing process failed: {e}")
-    
+
+
+
+
+
+    elif page == "Attribute Transfer":
+
+        st.header("😊 Attribute Transfer")
+
+        st.markdown(
+
+            """
+
+            Upload a **source image** with the facial attribute (e.g., a smile) and a **target image** with a neutral face.  
+
+            Click the button to transfer the facial attribute from the source to the target.
+
+            """
+
+        )
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            source_img_file = st.file_uploader("Upload Source Image (with Attribute)", type=["jpg", "jpeg", "png"],
+                                               key="attr_source")
+
+            if source_img_file:
+                source_img = Image.open(source_img_file).convert("RGB")
+
+                st.image(source_img, caption="Source Image", use_container_width=True)
+
+        with col2:
+
+            target_img_file = st.file_uploader("Upload Target Image (Neutral Face)", type=["jpg", "jpeg", "png"],
+                                               key="attr_target")
+
+            if target_img_file:
+                target_img = Image.open(target_img_file).convert("RGB")
+
+                st.image(target_img, caption="Target Image", use_container_width=True)
+
+        if source_img_file and target_img_file:
+
+            if st.button("Transfer Attribute"):
+
+                with st.spinner("Transferring attribute..."):
+
+                    try:
+
+                        from attribute_transfer import run_emotion_transfer
+
+                        result = run_emotion_transfer(source_img, target_img)
+
+                        st.success("✅ Attribute transfer complete!")
+
+                        st.image(result, caption="Result Image (Attribute Transferred)", use_container_width=True)
+
+                        # Convert result to byte stream for download
+
+                        img_bytes = io.BytesIO()
+
+                        result.save(img_bytes, format='PNG')
+
+                        img_bytes.seek(0)
+
+                        st.download_button(
+
+                            label="📥 Download Result Image",
+
+                            data=img_bytes,
+
+                            file_name="attribute_transferred_result.png",
+
+                            mime="image/png"
+
+                        )
+
+
+                    except Exception as e:
+
+                        st.error(f"❌ Something went wrong during transfer: {e}")
+
+
+
+
     else:
         st.info(f"Selected {page} - Implement this feature by expanding the code.")
     
