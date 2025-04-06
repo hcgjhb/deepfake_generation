@@ -10,7 +10,7 @@ import tempfile
 import subprocess
 import shutil
 from face_morphing import process_video_in_batches  # Import the face morphing function
-
+import moviepy
 # Set page configuration
 st.set_page_config(
     page_title="DeepFake Studio",
@@ -373,69 +373,110 @@ def main():
 
 
     # Other features abbreviated for simplicity
-    
+
     elif page == "Face Morphing":
-        st.header("Face Morphing")
-        st.markdown("Upload a source image and a target video to morph the face.")
-        
+
+        st.header("🌀 Face Swap")
+
+        st.markdown("Swap a face from an image into every frame of a video.")
+
         col1, col2 = st.columns(2)
-        
+
         with col1:
-            st.markdown("### Source Face")
-            source_img_file = st.file_uploader("Upload source face image", type=['jpg', 'jpeg', 'png'], key="morph_source")
-            if source_img_file:
-                try:
-                    pil_source = Image.open(source_img_file)
-                    with st.container():
-                        st.markdown('<div class="image-box"><h3>Source Image</h3></div>', unsafe_allow_html=True)
-                        st.image(pil_source, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error processing source image: {e}")
-                    source_img_file = None
-                
+            st.markdown("### Upload Source Image")
+            source_image_file = st.file_uploader("Source image (with face)", type=['jpg', 'jpeg', 'png'],
+                                                 key="face_image")
+            if source_image_file:
+                st.image(source_image_file, caption="Source Image", use_container_width=True)
+
         with col2:
-            st.markdown("### Target Video")
-            target_vid_file = st.file_uploader("Upload target video", type=['mp4', 'avi', 'mov'], key="morph_target")
-            if target_vid_file:
-                try:
-                    # Display video information
-                    st.markdown('<div class="image-box"><h3>Target Video</h3></div>', unsafe_allow_html=True)
-                    st.video(target_vid_file)
-                except Exception as e:
-                    st.error(f"Error processing target video: {e}")
-                    target_vid_file = None
-        
-        if source_img_file and target_vid_file:
-            if st.button("Perform Face Morphing", key="face_morph_btn"):
-                with st.spinner("Processing face morphing. This may take several minutes..."):
-                    try:
-                        output_path = process_face_morphing(pil_source, target_vid_file)
-                        
-                        if output_path:
-                            st.success("Face morphing completed successfully!")
-                            
-                            # Download button for the result
-                            with open(output_path, "rb") as f:
-                                video_bytes = f.read()
-                            
-                            st.download_button(
-                                label="Download Morphed Video",
-                                data=video_bytes,
-                                file_name="face_morph_result.mp4",
-                                mime="video/mp4",
-                                use_container_width=True
-                            )
-                            
-                            # Clean up the temporary files
-                            try:
-                                temp_dir = os.path.dirname(output_path)
-                                shutil.rmtree(temp_dir)
-                            except Exception as e:
-                                st.warning(f"Could not clean up temporary files: {e}")
-                        else:
-                            st.error("Face morphing failed. Please try with different images/video.")
-                    except Exception as e:
-                        st.error(f"Face morphing process failed: {e}")
+            st.markdown("### Upload Input Video")
+            input_video_file = st.file_uploader("Target video", type=['mp4', 'mov', 'avi'], key="input_video")
+            if input_video_file:
+                st.video(input_video_file)
+
+        if source_image_file and input_video_file:
+            if st.button("🔁 Run Face Swap"):
+                st.markdown("### Processing...")
+
+                # Progress bar
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+
+                for i in range(101):
+                    progress_bar.progress(i)
+                    status_text.text(f"Processing... {i}%")
+                    time.sleep(0.01)
+
+                # Save temp files
+                from pathlib import Path
+                import uuid
+
+                temp_dir = Path("outputs")
+                temp_dir.mkdir(exist_ok=True)
+
+                unique_id = uuid.uuid4().hex[:8]
+                source_path = temp_dir / f"source_{unique_id}.jpg"
+                input_path = temp_dir / f"input_{unique_id}.mp4"
+                output_path = temp_dir / f"output_{unique_id}.mp4"
+
+                # Save uploaded files
+                with open(source_path, "wb") as f:
+                    f.write(source_image_file.read())
+                with open(input_path, "wb") as f:
+                    f.write(input_video_file.read())
+
+                # Import face swap logic
+                from face_morphing import process_video_in_batches
+
+                result_path = process_video_in_batches(
+                    source_path=str(source_path),
+                    input_path=str(input_path),
+                    output_path=str(output_path),
+                    resize_factor=0.4,
+                    frame_skip=5,
+                    batch_size=10,
+                    max_frames=300
+                )
+
+                from moviepy.video.io.VideoFileClip import VideoFileClip
+
+                def reencode_video(input_path, output_path):
+                    clip = VideoFileClip(input_path)
+                    clip.write_videofile(output_path, codec='libx264', audio_codec='aac')
+                    clip.close()
+
+                # Paths
+                original_path = result_path  # the face-swap output path
+                fixed_path = original_path.replace(".mp4", "_fixed.mp4")
+
+                # Re-encode for compatibility
+                reencode_video(original_path, fixed_path)
+
+                # Now use the re-encoded video
+                result_path = fixed_path
+
+                if result_path and os.path.exists(result_path):
+                    st.success("✅ Face swap complete!")
+                    print(f"Video path: {result_path}")
+
+                    # Read the video as binary
+                    with open(result_path, "rb") as file:
+                        video_bytes = file.read()
+                        st.video(video_bytes)
+
+                    # Optional: download button
+                    with open(result_path, "rb") as video_file:
+                        st.download_button(
+                            label="📥 Download Output Video",
+                            data=video_file,
+                            file_name="face_swapped_output.mp4",
+                            mime="video/mp4"
+                        )
+
+                else:
+                    st.error("❌ Something went wrong during face swapping.")
+
 
 
 
