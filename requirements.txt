@@ -4,7 +4,7 @@ numpy
 jinja2
 mediapipe
 opencv-python
-torch>=2.0.0
+torch
 torchvision
 tensorflow
 tensorflow-hub
