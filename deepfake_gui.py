@@ -159,8 +159,8 @@ def main():
                      ["Face Swap", 
                       "Style Transfer",
                       "Face Morphing",   # Changed from "Face Modification"
-                      "Attribute Transfer",
-                      "Diffusion Generation"])
+                      "Attribute Transfer"
+                      ])
         
         st.markdown("---")
         
