@@ -82,7 +82,7 @@ def run_emotion_transfer(source_pil, target_pil):
 
     sx, sy, sw, sh = source_box
     tx, ty, tw, th = target_box
-    ty += 10  # small vertical alignment
+      # small vertical alignment
 
     # Prepare mouth patch
     source_mouth = source_img[sy:sy + sh, sx:sx + sw]
