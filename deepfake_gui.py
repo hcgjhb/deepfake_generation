@@ -376,7 +376,7 @@ def main():
 
     elif page == "Face Morphing":
 
-        st.header("🌀 Face Swap")
+        st.header("🌀 Face Morph")
 
         st.markdown("Swap a face from an image into every frame of a video.")
 
@@ -396,7 +396,7 @@ def main():
                 st.video(input_video_file)
 
         if source_image_file and input_video_file:
-            if st.button("🔁 Run Face Swap"):
+            if st.button("🔁 Run Face Morph"):
                 st.markdown("### Processing...")
 
                 # Progress bar
